@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { Text, View, StyleSheet, Button } from 'react-native';
+import { Text, View, StyleSheet, Button,StatusBar } from 'react-native';
 import { Audio } from 'expo-av';
+import { human, material, materialColors, robotoWeights } from 'react-native-typography'
+import { SafeAreaView } from 'react-native-web';
 
 // const stages = ['Awake', 'Type 2', 'Type 1']
 
@@ -10,11 +12,11 @@ import { Audio } from 'expo-av';
 export default function App() {
 
   const stages_tracks = [
-    {stage: 'Awake', track:playSoundAwake },
-    {stage: 'Light sleep', track: playSoundLight},
-    {stage: 'Deep sleep', track: playSoundDeep},
-    {stage: 'REM sleep', track: playSoundLight},
-    {stage: 'Alarm', track: playSoundAlarm}
+    {stage: 'Awake', track:playSoundAwake, minHR: 70, maxHR:80 },
+    {stage: 'Light sleep', track: playSoundLight,minHR: 60, maxHR:65},
+    {stage: 'Deep sleep', track: playSoundDeep, minHR: 50, maxHR:60},
+    {stage: 'REM sleep', track: playSoundLight, minHR: 65, maxHR:70},
+    {stage: 'Alarm', track: playSoundAlarm, minHR: 80, maxHR:90}
   ]
   
   const stages = [
@@ -30,8 +32,8 @@ export default function App() {
   let counter = 0;
   const [sound, setSound] = useState();
   // const [stage, setStage] = useState("REM");
-  const [currStage, setStage] = useState('Awake');
-
+  const [currStage, setStage] = useState(stages_tracks[0]);
+  const [currHR, setHR] = useState(80);
 
   const MINUTE_MS = 10000;
 
@@ -46,8 +48,8 @@ export default function App() {
         if(counter < stages.length)
         {
           console.log(stages[counter])
-          setStage(stages[counter].stage)
-          stages[counter].track()
+          setStage(stages[counter])
+        //  stages[counter].track()
           //play()
         }
         counter++;
@@ -55,6 +57,17 @@ export default function App() {
 
       return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
     }, [])
+
+
+    useEffect(() => { currStage.track()  }, [currStage])
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setHR(getRndInteger(currStage.minHR, currStage.maxHR))
+      }, 1000);
+
+      return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
+    }, [currStage])
     
   // async function playSound() {
 
@@ -128,8 +141,14 @@ export default function App() {
   }, [sound]);
 
   return (
+    
     <View style={styles.container}>
-      <Text>{currStage}</Text>
+        <StatusBar
+        barStyle="light-content"
+      />
+
+      <Text style={styles.hr}>HR: {currHR}</Text>
+      <Text style={styles.stage}>{currStage.stage}</Text>
       {/* <Button title="Play Sound" onPress={playSound} /> */}
       {/* <Button title="Stop Sound" onPress={stopSound} /> */}
     </View>
@@ -182,8 +201,26 @@ function getRndInteger(min, max) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#000',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  stage: {
+    //  ...material.display4,
+      ...robotoWeights.thin,
+    //  color: materialColors.blackPrimary,
+    //  fontSize: 120,
+      fontSize: 60 ,
+   //   textDecorationLine: 'underline',
+      color:'#fff',
+    },
+    hr: {
+      //  ...material.display4,
+        ...robotoWeights.light,
+      //  color: materialColors.blackPrimary,
+      //  fontSize: 120,
+        fontSize: 32 ,
+     //   textDecorationLine: 'underline',
+        color:'#fff',
+      },
 });
